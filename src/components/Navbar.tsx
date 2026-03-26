@@ -21,7 +21,7 @@ export const Navbar: React.FC = () => {
               <BrainCircuit className="w-6 h-6 text-brand-500" />
             </div>
             <span className="font-heading font-bold text-2xl tracking-tight text-heading-light dark:text-heading-dark">
-              Pro<span className="text-brand-500">Quiz</span>
+              Kanya <span className="text-brand-500">Cutu</span> Quiz
             </span>
           </Link>
 

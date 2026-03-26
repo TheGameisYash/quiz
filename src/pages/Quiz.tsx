@@ -7,13 +7,55 @@ import { Button } from '../components/ui/Button';
 
 export const Quiz: React.FC = () => {
   const navigate = useNavigate();
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, number>>({});
-  const [timeLeft, setTimeLeft] = useState(120 * 60); // 120 minutes in seconds
+
+  const userStr = localStorage.getItem('currentUser');
+  const user = userStr ? JSON.parse(userStr) : null;
+  const progressKey = user ? `quiz_progress_${user.phone}_${user.name}` : null;
+
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(() => {
+    if (progressKey) {
+      const saved = localStorage.getItem(progressKey);
+      if (saved) return JSON.parse(saved).currentQuestionIndex || 0;
+    }
+    return 0;
+  });
+
+  const [answers, setAnswers] = useState<Record<number, number>>(() => {
+    if (progressKey) {
+      const saved = localStorage.getItem(progressKey);
+      if (saved) return JSON.parse(saved).answers || {};
+    }
+    return {};
+  });
+
+  const [timeLeft, setTimeLeft] = useState(() => {
+    if (progressKey) {
+      const saved = localStorage.getItem(progressKey);
+      if (saved) return JSON.parse(saved).timeLeft || (120 * 60);
+    }
+    return 120 * 60; // 120 minutes in seconds
+  });
+
+  // Save progress whenever it changes
+  useEffect(() => {
+    if (progressKey) {
+      localStorage.setItem(progressKey, JSON.stringify({
+        currentQuestionIndex,
+        answers,
+        timeLeft
+      }));
+    }
+  }, [currentQuestionIndex, answers, timeLeft, progressKey]);
+
+  useEffect(() => {
+    if (!user) {
+      navigate('/register', { replace: true });
+    }
+  }, [navigate, user]);
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft((prev) => {
+      setTimeLeft((prev: number) => {
         if (prev <= 1) {
           clearInterval(timer);
           handleSubmit();
@@ -23,12 +65,12 @@ export const Quiz: React.FC = () => {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, [answers]); // Added answers dependency so it submits current answers
+  }, []); // Added answers dependency so it submits current answers
 
   const currentQuestion = questions[currentQuestionIndex];
 
   const handleSelectOption = (optionIndex: number) => {
-    setAnswers((prev) => ({
+    setAnswers((prev: Record<number, number>) => ({
       ...prev,
       [currentQuestion.id]: optionIndex,
     }));
@@ -36,18 +78,21 @@ export const Quiz: React.FC = () => {
 
   const handleNext = () => {
     if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex((prev) => prev + 1);
+      setCurrentQuestionIndex((prev: number) => prev + 1);
     }
   };
 
   const handlePrev = () => {
     if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex((prev) => prev - 1);
+      setCurrentQuestionIndex((prev: number) => prev - 1);
     }
   };
 
   const handleSubmit = () => {
     if (window.confirm('Are you sure you want to submit the assessment?')) {
+      if (progressKey) {
+        localStorage.removeItem(progressKey);
+      }
       navigate('/result', { state: { answers } });
     }
   };
