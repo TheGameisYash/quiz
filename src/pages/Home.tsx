@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { BrainCircuit, Timer, FileCheck, Award, AlertCircle, LogIn, LogOut } from 'lucide-react';
 import { Button } from '../components/ui/Button';
-import { listenToActiveQuiz, signInWithGoogle, auth } from '../lib/firebase';
+import { listenToActiveQuiz, signInWithGoogle, auth, updateUserPresence, listenToMyMessages, markMessageAsRead } from '../lib/firebase';
 import { fetchAllQuestions } from '../lib/questionsStore';
 import type { QuizSetting } from '../data/questions';
 
@@ -40,6 +40,29 @@ export const Home: React.FC = () => {
     }
   }, []);
 
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    let interval: any;
+    if (currentUser?.uid) {
+      updateUserPresence(currentUser, 'Viewing Home');
+      interval = setInterval(() => {
+        updateUserPresence(currentUser, 'Viewing Home');
+      }, 60000);
+      
+      const unsubscribe = listenToMyMessages(currentUser.uid, (msg) => {
+        setToastMessage(msg.text);
+        markMessageAsRead(currentUser.uid);
+        setTimeout(() => setToastMessage(null), 6000);
+      });
+      
+      return () => {
+        clearInterval(interval);
+        unsubscribe();
+      };
+    }
+  }, [currentUser]);
+
   const handleGoogleLogin = async () => {
     try {
       const user = await signInWithGoogle();
@@ -70,7 +93,26 @@ export const Home: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[80vh] text-center max-w-4xl mx-auto">
+    <div className="flex flex-col items-center justify-center min-h-[80vh] text-center max-w-4xl mx-auto relative">
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9, y: -50 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: -50 }}
+            className="fixed top-8 left-1/2 -translate-x-1/2 z-50 bg-white dark:bg-slate-900 border-2 border-brand-500 shadow-[0_10px_40px_-10px_rgba(236,72,153,0.3)] rounded-2xl p-4 flex items-center gap-4 max-w-md w-[90%]"
+          >
+            <div className="w-12 h-12 bg-gradient-to-br from-brand-400 to-brand-600 rounded-full flex items-center justify-center shrink-0 shadow-inner">
+               <span className="text-2xl drop-shadow-md">💌</span>
+            </div>
+            <div className="text-left">
+              <h4 className="font-extrabold text-brand-600 dark:text-brand-400 text-sm tracking-wide uppercase">Admin Says:</h4>
+              <p className="text-slate-700 dark:text-slate-300 font-medium text-base mt-0.5">{toastMessage}</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <motion.div
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}

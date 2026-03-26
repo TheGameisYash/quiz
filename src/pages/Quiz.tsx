@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Clock, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { fetchAllQuestions } from '../lib/questionsStore';
+import { updateUserPresence, listenToMyMessages, markMessageAsRead } from '../lib/firebase';
 import type { Question, QuizSetting } from '../data/questions';
+import { motion, AnimatePresence } from 'framer-motion';
 import { QuestionCard } from '../components/QuestionCard';
 import { Button } from '../components/ui/Button';
 
@@ -88,6 +90,29 @@ export const Quiz: React.FC = () => {
       }));
     }
   }, [currentQuestionIndex, answers, timeLeft, progressKey, shuffledIds, questions.length]);
+
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    let interval: any;
+    if (user && user.uid) {
+      updateUserPresence(user, 'Testing: ' + (activeQuiz?.name || 'Quiz'));
+      interval = setInterval(() => {
+        updateUserPresence(user, 'Testing: ' + (activeQuiz?.name || 'Quiz'));
+      }, 60000);
+      
+      const unsubscribe = listenToMyMessages(user.uid, (msg) => {
+        setToastMessage(msg.text);
+        markMessageAsRead(user.uid);
+        setTimeout(() => setToastMessage(null), 6000);
+      });
+      
+      return () => {
+        clearInterval(interval);
+        unsubscribe();
+      };
+    }
+  }, [user, activeQuiz]);
 
   useEffect(() => {
     if (!user) {
@@ -180,6 +205,25 @@ export const Quiz: React.FC = () => {
 
   return (
     <div className="max-w-5xl mx-auto flex flex-col md:flex-row gap-8 relative items-start">
+      <AnimatePresence>
+        {toastMessage && (
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9, y: -50 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: -50 }}
+            className="fixed top-8 left-1/2 -translate-x-1/2 z-50 bg-white dark:bg-slate-900 border-2 border-brand-500 shadow-[0_10px_40px_-10px_rgba(236,72,153,0.3)] rounded-2xl p-4 flex items-center gap-4 max-w-md w-[90%]"
+          >
+            <div className="w-12 h-12 bg-gradient-to-br from-brand-400 to-brand-600 rounded-full flex items-center justify-center shrink-0 shadow-inner">
+               <span className="text-2xl drop-shadow-md">💌</span>
+            </div>
+            <div className="text-left">
+              <h4 className="font-extrabold text-brand-600 dark:text-brand-400 text-sm tracking-wide uppercase">Admin Says:</h4>
+              <p className="text-slate-700 dark:text-slate-300 font-medium text-base mt-0.5">{toastMessage}</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Left side: Navigation / Info */}
       <div className="w-full md:w-64 shrink-0 flex flex-col gap-6 md:sticky md:top-28">
         <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col items-center">
@@ -214,7 +258,7 @@ export const Quiz: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-5 gap-3 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar pb-2">
+          <div className="grid grid-cols-5 gap-2.5 max-h-[40vh] overflow-y-auto pr-1 pb-2 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-slate-200 dark:[&::-webkit-scrollbar-thumb]:bg-slate-700 [&::-webkit-scrollbar-thumb]:rounded-full">
             {questions.map((q: Question, idx: number) => {
               const isAnswered = answers[q.id] !== undefined;
               const isCurrent = idx === currentQuestionIndex;
@@ -223,7 +267,7 @@ export const Quiz: React.FC = () => {
                   key={q.id}
                   onClick={() => setCurrentQuestionIndex(idx)}
                   className={`
-                    w-10 h-10 rounded-full text-xs font-bold flex items-center justify-center transition-all shadow-sm
+                    w-8 h-8 rounded-full text-xs font-bold flex items-center justify-center transition-all shadow-sm
                     ${isCurrent ? 'ring-4 ring-brand-500/30 scale-110' : 'hover:scale-110'}
                     ${isAnswered 
                       ? 'bg-brand-500 text-white' 

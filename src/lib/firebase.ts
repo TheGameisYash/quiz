@@ -1,7 +1,7 @@
 import { initializeApp, getApps } from "firebase/app";
 import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { getFirestore, collection, addDoc, getDocs, orderBy, query, setDoc, doc, where, deleteDoc, updateDoc, writeBatch, limit, onSnapshot } from "firebase/firestore";
-import type { QuizSetting } from "../data/questions";
+import type { QuizSetting, Question } from "../data/questions";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -224,9 +224,92 @@ export const getQuestionsFromDB = async (quizId: string) => {
   }
 };
 
-export const updateQuestionInDB = async (firebaseId: string, updates: any) => {
+export const updateQuestionInDB = async (firebaseId: string, updates: Partial<Question>) => {
   if (!db) return;
-  await updateDoc(doc(db, "questions", firebaseId), updates);
+  try {
+    const docRef = doc(db, "questions", firebaseId);
+    await updateDoc(docRef, updates);
+  } catch (e) {
+    console.error('Error updating question:', e);
+    throw e;
+  }
+};
+
+// LIVE PRESENCE & MESSAGING SYSTEM
+export const updateUserPresence = async (user: any, status: string) => {
+  if (!db || !user?.uid) return;
+  try {
+    const docRef = doc(db, 'active_sessions', user.uid);
+    await setDoc(docRef, {
+      uid: user.uid,
+      name: user.name,
+      email: user.email,
+      photoURL: user.photoURL,
+      status: status,
+      lastActive: new Date().toISOString()
+    }, { merge: true });
+  } catch (err) {
+    console.error("Presence update failed:", err);
+  }
+};
+
+export const listenToActiveSessions = (callback: (sessions: any[]) => void) => {
+  if (!db) {
+    callback([]);
+    return () => {};
+  }
+  
+  const sessionsQuery = query(collection(db, 'active_sessions'));
+  
+  return onSnapshot(sessionsQuery, (snapshot) => {
+    const sessions = snapshot.docs.map(d => d.data());
+    const recent = sessions.filter((s: any) => {
+       const time = new Date(s.lastActive).getTime();
+       return Date.now() - time < 5 * 60 * 1000;
+    });
+    recent.sort((a,b) => b.status.localeCompare(a.status));
+    callback(recent);
+  }, (err) => console.error("Active Sessions Error:", err));
+};
+
+export const sendMessageToUser = async (uid: string, text: string) => {
+  if (!db) return;
+  try {
+    const docRef = doc(db, 'active_sessions', uid);
+    await updateDoc(docRef, {
+      latestMessage: {
+        text,
+        id: Date.now().toString(),
+        read: false
+      }
+    });
+  } catch (err) {
+    console.error("Failed to send message", err);
+    throw err;
+  }
+};
+
+export const listenToMyMessages = (uid: string, callback: (msg: { text: string, id: string }) => void) => {
+  if (!db || !uid) return () => {};
+  const docRef = doc(db, 'active_sessions', uid);
+  return onSnapshot(docRef, (docSnap) => {
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      if (data.latestMessage && !data.latestMessage.read) {
+        callback(data.latestMessage);
+      }
+    }
+  });
+};
+
+export const markMessageAsRead = async (uid: string) => {
+  if (!db) return;
+  try {
+    const docRef = doc(db, 'active_sessions', uid);
+    await updateDoc(docRef, {
+      "latestMessage.read": true
+    });
+  } catch (err) {}
 };
 
 export const deleteQuestionFromDB = async (firebaseId: string) => {

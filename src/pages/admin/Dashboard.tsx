@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { LayoutDashboard, Users, FileText, Settings, Search, ArrowLeft, CheckCircle2, XCircle, PlusCircle, BookOpen, ToggleLeft, ToggleRight, Trash2, Edit, Save, X } from 'lucide-react';
+import { LayoutDashboard, Users, FileText, Settings, Search, ArrowLeft, CheckCircle2, XCircle, PlusCircle, BookOpen, ToggleLeft, ToggleRight, Trash2, Edit, Save, X, Activity, Send, Clock } from 'lucide-react';
 import { fetchAllQuestions, saveNewQuestions } from '../../lib/questionsStore';
-import { getQuizSettings, createQuizSetting, updateQuizSetting, deleteQuizSetting, updateQuizActiveStatus, getQuizResults, deleteQuestionFromDB, updateQuestionInDB } from '../../lib/firebase';
+import { getQuizSettings, createQuizSetting, updateQuizSetting, deleteQuizSetting, updateQuizActiveStatus, getQuizResults, deleteQuestionFromDB, updateQuestionInDB, listenToActiveSessions, sendMessageToUser } from '../../lib/firebase';
 import type { Question, QuizSetting } from '../../data/questions';
 import { QuestionCard } from '../../components/QuestionCard';
 
 export const Dashboard: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'QUIZZES' | 'QUESTIONS' | 'USERS'>('QUIZZES');
+  const [activeTab, setActiveTab] = useState<'QUIZZES' | 'QUESTIONS' | 'USERS' | 'LIVE'>('QUIZZES');
   
   // Quizzes State
   const [quizzes, setQuizzes] = useState<QuizSetting[]>([]);
@@ -56,6 +56,33 @@ export const Dashboard: React.FC = () => {
     }, 300);
     return () => clearTimeout(handler);
   }, [searchTerm]);
+
+  // Live Monitor State
+  const [liveSessions, setLiveSessions] = useState<any[]>([]);
+  const [messages, setMessages] = useState<Record<string, string>>({}); 
+  const [sendingMsgId, setSendingMsgId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (activeTab === 'LIVE') {
+      const unsubscribe = listenToActiveSessions((sessions) => {
+        setLiveSessions(sessions);
+      });
+      return () => unsubscribe();
+    }
+  }, [activeTab]);
+
+  const handleSendLiveMessage = async (uid: string) => {
+    const text = messages[uid]?.trim();
+    if (!text) return;
+    setSendingMsgId(uid);
+    try {
+      await sendMessageToUser(uid, text);
+      setMessages(prev => ({ ...prev, [uid]: '' }));
+    } catch (e) {
+      alert("Failed to send message: " + e);
+    }
+    setSendingMsgId(null);
+  };
 
   useEffect(() => {
     loadQuizzes();
@@ -291,6 +318,17 @@ export const Dashboard: React.FC = () => {
             Questions Bank
           </button>
         )}
+        
+        <button 
+          onClick={() => setActiveTab('LIVE')}
+          className={`flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors ${activeTab === 'LIVE' ? 'bg-brand-500 text-white shadow-md' : 'hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400'}`}
+        >
+          <Activity className={`w-5 h-5 ${activeTab === 'LIVE' ? 'animate-pulse' : ''}`} />
+          Live Monitor
+          {liveSessions.length > 0 && activeTab !== 'LIVE' && (
+             <span className="ml-auto w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
+          )}
+        </button>
         
         <button 
           onClick={() => setActiveTab('USERS')}
@@ -643,6 +681,91 @@ export const Dashboard: React.FC = () => {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* LIVE STANDINGS TAB */}
+        {activeTab === 'LIVE' && (
+          <div>
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-heading-light dark:text-heading-dark mb-1 flex items-center">
+                <Activity className="w-8 h-8 mr-3 text-brand-500 animate-pulse" /> Live Monitor
+              </h1>
+              <p className="text-text-light dark:text-text-dark">
+                Watch identically who is viewing the app or actively taking tests right now.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {liveSessions.length === 0 ? (
+                <div className="col-span-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center text-slate-500 flex flex-col items-center">
+                  <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-4">
+                    <Activity className="w-10 h-10 text-slate-400 dark:text-slate-600" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-700 dark:text-slate-300 mb-2">Nobody's Online Right Now</h3>
+                  <p>When students access the platform or run tests, they will instantly appear here.</p>
+                </div>
+              ) : (
+                liveSessions.map(session => (
+                    <div key={session.uid} className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col h-full relative overflow-hidden group">
+                      {session.status.includes('Testing') && (
+                        <div className="absolute top-0 inset-x-0 h-1 bg-brand-500 animate-pulse shadow-[0_0_10px_rgba(236,72,153,0.8)]"></div>
+                      )}
+                      <div className="flex items-center gap-4 mb-4">
+                        {session.photoURL ? (
+                          <img src={session.photoURL} alt="" className="w-12 h-12 rounded-full shadow-md" />
+                        ) : (
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-brand-400 to-brand-600 flex items-center justify-center font-bold text-white text-lg shadow-md">{session.name?.charAt(0) || '?'}</div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-heading-light dark:text-heading-dark truncate border-b border-transparent">{session.name}</h4>
+                          <p className="text-xs font-mono text-slate-500 truncate mt-0.5">{session.email}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-slate-50 dark:bg-slate-800/50 rounded-xl p-3 mb-5 flex-1 shadow-inner border border-slate-100 dark:border-slate-700">
+                        <div className="flex items-center gap-2 mb-2">
+                          {session.status.includes('Testing') ? (
+                             <span className="flex h-3 w-3 relative">
+                               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
+                               <span className="relative inline-flex rounded-full h-3 w-3 bg-brand-500"></span>
+                             </span>
+                          ) : (
+                            <Activity className="w-4 h-4 text-blue-500" />
+                          )}
+                          <span className="text-sm font-bold dark:text-slate-200">{session.status}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+                          <Clock className="w-3.5 h-3.5" />
+                          Pinging: {new Date(session.lastActive).toLocaleTimeString()}
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2 items-center mt-auto relative">
+                        <input
+                           type="text"
+                           placeholder="Type a cute message..."
+                           value={messages[session.uid] || ''}
+                           onChange={e => setMessages(prev => ({...prev, [session.uid]: e.target.value}))}
+                           className="flex-1 text-sm bg-slate-50 dark:bg-slate-800 border-none rounded-xl px-4 py-3 focus:ring-2 focus:ring-brand-500 pr-12 placeholder-slate-400 transition-all font-medium"
+                           onKeyDown={(e) => e.key === 'Enter' && handleSendLiveMessage(session.uid)}
+                        />
+                        <button 
+                           onClick={() => handleSendLiveMessage(session.uid)}
+                           disabled={sendingMsgId === session.uid || !messages[session.uid]?.trim()}
+                           className={`absolute right-2 p-1.5 rounded-lg transition-colors ${
+                              sendingMsgId === session.uid || !messages[session.uid]?.trim() 
+                              ? 'text-slate-400 bg-transparent' 
+                              : 'text-white bg-brand-500 hover:bg-brand-600 shadow-md hover:-translate-y-0.5'
+                           }`}
+                        >
+                           <Send className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                ))
+              )}
+            </div>
           </div>
         )}
       </div>
