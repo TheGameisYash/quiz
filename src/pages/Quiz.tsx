@@ -190,19 +190,31 @@ export const Quiz: React.FC = () => {
           <div className="text-sm text-slate-500 mt-1">Time Remaining</div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm">
           <div className="flex justify-between items-center mb-4">
-            <h3 className="font-semibold text-heading-light dark:text-heading-dark">Progress</h3>
-            <span className="text-sm font-medium text-brand-500">{answeredCount}/{questions.length}</span>
+            <h3 className="font-bold text-heading-light dark:text-heading-dark text-lg">Question Map</h3>
+            <div className="text-xs font-bold px-3 py-1 bg-brand-50 dark:bg-brand-900/20 text-brand-600 dark:text-brand-400 rounded-full border border-brand-100 dark:border-brand-800 shadow-sm">
+              {answeredCount}/{questions.length} Attempted
+            </div>
           </div>
-          <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 mb-6">
+          
+          <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2 mb-6 overflow-hidden">
             <div 
-              className="bg-brand-500 h-2 rounded-full transition-all duration-300" 
+              className="bg-brand-500 h-2 rounded-full transition-all duration-500 ease-out" 
               style={{ width: `${(answeredCount / questions.length) * 100}%` }}
             />
           </div>
 
-          <div className="grid grid-cols-5 gap-2 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
+          <div className="flex gap-4 text-xs font-semibold text-slate-500 mb-6 justify-center">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-brand-500 shadow-sm"></div> Attempted
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm"></div> Skipped
+            </div>
+          </div>
+
+          <div className="grid grid-cols-5 gap-3 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar pb-2">
             {questions.map((q: Question, idx: number) => {
               const isAnswered = answers[q.id] !== undefined;
               const isCurrent = idx === currentQuestionIndex;
@@ -211,9 +223,13 @@ export const Quiz: React.FC = () => {
                   key={q.id}
                   onClick={() => setCurrentQuestionIndex(idx)}
                   className={`
-                    w-8 h-8 rounded-lg text-xs font-mono flex items-center justify-center transition-all
-                    ${isCurrent ? 'ring-2 ring-brand-500 ring-offset-2 dark:ring-offset-slate-900' : ''}
-                    ${isAnswered ? 'bg-brand-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700'}
+                    w-10 h-10 rounded-full text-xs font-bold flex items-center justify-center transition-all shadow-sm
+                    ${isCurrent ? 'ring-4 ring-brand-500/30 scale-110' : 'hover:scale-110'}
+                    ${isAnswered 
+                      ? 'bg-brand-500 text-white' 
+                      : (isCurrent 
+                          ? 'bg-white dark:bg-slate-900 border-2 border-brand-500 text-brand-600 dark:text-brand-400' 
+                          : 'bg-slate-50 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700')}
                   `}
                 >
                   {idx + 1}
