@@ -1,0 +1,602 @@
+Part A – General (25 प्रश्न / Questions)
+भारत का संविधान कब लागू हुआ था?
+a) 15 अगस्त 1947
+b) 26 जनवरी 1950
+c) 26 नवंबर 1949
+d) 2 अक्टूबर 1950
+
+The capital of Madhya Pradesh is:
+a) Indore
+b) Bhopal
+c) Gwalior
+d) Jabalpur
+
+कोण सा विटामिन रक्त के थक्के बनाने में सहायक होता है?
+a) विटामिन A
+b) विटामिन C
+c) विटामिन K
+d) विटामिन D
+
+‘CPU’ is the:
+a) Central Processing Unit
+b) Central Programming Unit
+c) Computer Processing Utility
+d) Central Power Unit
+
+नर्मदा नदी किस दिशा में बहती है?
+a) पूर्व से पश्चिम
+b) पश्चिम से पूर्व
+c) उत्तर से दक्षिण
+d) दक्षिण से उत्तर
+
+Find the value of: 25% of 320 = ?
+a) 40
+b) 60
+c) 80
+d) 100
+
+‘Synonym’ of “Rapid” is:
+a) Slow
+b) Quick
+c) Late
+d) Dull
+
+“बाल मजदूरी” संबंध रखता है –
+a) शिक्षा से
+b) स्वास्थ्य से
+c) सामाजिक समस्या से
+d) पर्यावरण से
+
+Which gas is essential for respiration in humans?
+a) Nitrogen
+b) Oxygen
+c) Carbon dioxide
+d) Hydrogen
+
+“उनका” का स्त्रीलिंग रूप क्या होगा?
+a) उनका
+b) उनकी
+c) उनके
+d) उन
+
+Choose the correct spelling:
+a) Recieve
+b) Receive
+c) Recive
+d) Receeve
+
+भारत में पंचवर्षीय योजना कौन बनाता है?
+a) संसद
+b) योजना आयोग / नीति आयोग
+c) उच्च न्यायालय
+d) राष्ट्रपति अकेले
+
+3, 6, 12, 24, ?
+a) 36
+b) 40
+c) 48
+d) 60
+
+Light year is the unit of:
+a) Time
+b) Distance
+c) Speed
+d) Intensity
+
+“कठिन” का विलोम (Antonym) क्या है?
+a) सरल
+b) भारी
+c) बड़ा
+d) लंबा
+
+Simple interest on 2000 रुपये at 10% per annum for 2 years is:
+a) 200
+b) 300
+c) 400
+d) 500
+
+In the human body, RBCs are formed mainly in:
+a) Liver
+b) Spleen
+c) Bone marrow
+d) Kidney
+
+“He is looking for a job.” – Choose correct passive form:
+a) A job is looked for by him
+b) A job was looked for by him
+c) A job is being looked for by him
+d) A job has been looked for by him
+
+पर्यावरण दिवस कब मनाया जाता है?
+a) 5 जून
+b) 14 नवम्बर
+c) 1 मई
+d) 2 अक्टूबर
+
+Which one is NOT a web browser?
+a) Chrome
+b) Firefox
+c) MS Word
+d) Edge
+
+“मध्यप्रदेश का हृदय” किस शहर को कहा जाता है?
+a) भोपाल
+b) जबलपुर
+c) सागर
+d) इंदौर
+
+Boiling point of pure water at sea level is:
+a) 0°C
+b) 50°C
+c) 100°C
+d) 150°C
+
+सही वाक्य चुनिए –
+a) वह जा रहा हैं।
+b) वह जा रहे है।
+c) वह जा रहा है।
+d) वह जा रहा हूँ।
+
+“UNICEF” works mainly for:
+a) Farmers
+b) Children
+c) Soldiers
+d) Old people
+
+9 × 12 ÷ 6 = ?
+a) 9
+b) 12
+c) 18
+d) 24
+
+Part B – Technical (Dialysis Technician – 75 Questions) [based on official renal & dialysis topics]
+
+Functional unit of kidney is:
+a) Nephron
+b) Neuron
+c) Alveolus
+d) Neurilemma
+
+कितने किडनी सामान्य मनुष्य में पायी जाती हैं?
+a) एक
+b) दो
+c) तीन
+d) चार
+
+Normal GFR in a healthy adult is about:
+a) 10 ml/min
+b) 50 ml/min
+c) 120 ml/min
+d) 250 ml/min
+
+Which hormone is mainly produced by kidney?
+a) Insulin
+b) Erythropoietin
+c) Thyroxine
+d) Adrenaline
+
+Renin is secreted from:
+a) Juxtaglomerular cells
+b) Podocytes
+c) Hepatocytes
+d) Neurons
+
+मुख्य रूप से रक्त का छन्नन (filtration) कहाँ होता है?
+a) लूप ऑफ हेनले
+b) बोमैन कैप्सूल
+c) कलेक्टिंग डक्ट
+d) यूरिटर
+
+Aldosterone acts mainly on:
+a) Glomerulus
+b) Proximal tubule
+c) Distal tubule and collecting duct
+d) Urethra
+
+Acute kidney injury is usually of duration:
+a) Hours to days
+b) Months to years
+c) Life long
+d) Only in childhood
+
+CKD का full form क्या है?
+a) Chronic kidney damage
+b) Chronic kidney disease
+c) Complete kidney disease
+d) Combined kidney disorder
+
+Earliest sign of diabetic nephropathy:
+a) Macroalbuminuria
+b) Microalbuminuria
+c) Hematuria
+d) Anuria
+
+“Uremia” refers to:
+a) Sugar in urine
+b) Protein in urine
+c) Nitrogenous waste retention with symptoms
+d) Pus in urine
+
+Absolute indication for emergency dialysis in AKI:
+a) Mild anemia
+b) Refractory hyperkalemia
+c) Simple UTI
+d) Mild edema
+
+Hemodialysis removes solutes mainly by:
+a) Osmosis
+b) Diffusion
+c) Active transport
+d) Endocytosis
+
+Principle of hemofiltration is mainly:
+a) Convection
+b) Radiation
+c) Conduction
+d) Reflection
+
+In hemodialysis, blood and dialysate are separated by:
+a) Thick wall
+b) Semipermeable membrane
+c) Metal plate
+d) Glass wall
+
+सामान्य hemodialysis सत्र की अवधि लगभग कितनी रहती है?
+a) 30 मिनट
+b) 1 घंटा
+c) 3–4 घंटे
+d) 10 घंटे
+
+Frequency of maintenance HD in most ESRD patients:
+a) Once a week
+b) Twice a week
+c) Thrice a week
+d) Once a month
+
+In peritoneal dialysis, the dialyzing membrane is:
+a) Artificial dialyzer
+b) Skin
+c) Peritoneum
+d) Pleura
+
+CAPD का full form क्या选 है?
+a) Continuous ambulatory peritoneal dialysis
+b) Chronic acute peritoneal dialysis
+c) Complete artificial peritoneal dialysis
+d) Central ambulatory plasma dialysis
+
+An arteriovenous fistula is:
+a) Artery to nerve
+b) Artery to vein
+c) Vein to vein
+d) Artery to muscle
+
+AV fistula सबसे अधिक कहाँ बनाई जाती है?
+a) Femoral region
+b) Radio‑cephalic at wrist
+c) Carotid‑jugular
+d) Axillary
+
+Temporary vascular access for HD is usually:
+a) Glass tube
+b) Double‑lumen venous catheter
+c) Simple IV cannula
+d) Arterial line only
+
+The usual anticoagulant used in HD circuit:
+a) Warfarin
+b) Heparin
+c) Aspirin
+d) Streptokinase
+
+Heparin is contraindicated in:
+a) Active bleeding
+b) Fever only
+c) Diabetes only
+d) Mild anemia only
+
+“Dry weight” means:
+a) Weight without clothes
+b) Weight after removing all extra fluid without hypotension
+c) Weight before first dialysis
+d) Birth weight
+
+A common cause of intradialytic hypotension:
+a) Very slow UF
+b) Excessive UF / rapid fluid removal
+c) High dialysate sodium
+d) No fluid removal
+
+First step in severe hypotension during HD:
+a) Increase UF rate
+b) Stop UF, lower head/raise legs, check BP
+c) Stop all alarms
+d) Send patient home
+
+HD machine का कौन सा भाग air bubbles detect करता है?
+a) Blood pump
+b) Air detector
+c) Heater
+d) Power supply
+
+Main process used in water treatment for HD to remove dissolved salts:
+a) Simple filtration
+b) Reverse osmosis
+c) Sedimentation
+d) Distillation only
+
+High calcium or magnesium in dialysate water is mainly due to:
+a) Bacteria
+b) Hardness of water
+c) Virus
+d) Chlorination
+
+Which infection is a major risk in dialysis units?
+a) Hepatitis B
+b) Cholera
+c) Malaria
+d) Rabies
+
+Ideal vaccination for HD patients and staff:
+a) Hepatitis B vaccine
+b) Rabies vaccine
+c) Typhoid vaccine
+d) Measles vaccine
+
+Dialysis disequilibrium syndrome occurs usually:
+a) After very slow dialysis
+b) After very rapid first dialysis in severe uremia
+c) In normal person
+d) Only in PD
+
+Symptom NOT typical of dialysis disequilibrium:
+a) Headache
+b) Nausea
+c) Convulsions
+d) Fracture of bone
+
+A common symptom of fluid overload in CKD patient:
+a) Weight loss
+b) Pedal edema and breathlessness
+c) Hair fall
+d) Skin rash only
+
+Erythropoietin deficiency in CKD mainly causes:
+a) Jaundice
+b) Anemia
+c) Diarrhea
+d) Fever
+
+Before starting HD, which test is most important for safety?
+a) Blood group
+b) Serum potassium
+c) Serum amylase
+d) Lipid profile
+
+‘Reuse’ of dialyzer means:
+a) Use on many patients
+b) Same patient after proper cleaning and disinfection
+c) Throw after one use
+d) Use without washing
+
+Dialyzer reprocessing में क्या अनिवार्य है?
+a) Proper labeling with patient name
+b) Use on any patient
+c) No testing
+d) Store in open air
+
+Acute complication of HD due to air in venous line:
+a) Air embolism
+b) Hemorrhage
+c) Hypoglycemia
+d) Arthritis
+
+To prevent air embolism, technician should:
+a) Keep venous chamber empty
+b) Ensure proper priming and functioning of air detector
+c) Increase pump speed suddenly
+d) Ignore small bubbles
+
+Common side effect of excessive heparin:
+a) Hypertension
+b) Bleeding
+c) Constipation
+d) Cough
+
+Hemodialysis room cleaning protocol includes:
+a) No disinfection
+b) Regular surface disinfection with approved agents
+c) Water only
+d) Sand cleaning
+
+Universal precautions include all EXCEPT:
+a) Wearing gloves
+b) Hand hygiene
+c) Recapping used needles by hand
+d) Proper disposal of sharps
+
+For needle stick injury, first action:
+a) Suck wound
+b) Wash with soap and water, encourage slight bleeding
+c) Apply bandage immediately without washing
+d) Ignore
+
+सामान्यतः dialyzer की किस विशेषता से clearance तय होता है?
+a) रंग
+b) Surface area और permeability
+c) Weight
+d) Company name
+
+Bicarbonate dialysate is preferred because:
+a) Cheaper only
+b) Better physiological buffer
+c) Toxic
+d) No role
+
+Hyperkalemia के ECG में क्या दिख सकता है?
+a) Tall peaked T waves
+b) Bradycardia only
+c) Flat T waves
+d) U waves
+
+सबसे अच्छा संकेत कि HD session में पर्याप्त fluid निकला है:
+a) Sudden severe hypotension
+b) Patient comfortable, BP near target, edema reduced
+c) Severe cramps
+d) Chest pain
+
+In PD, infection at catheter exit site is called:
+a) Peritonitis
+b) Exit‑site infection
+c) Sepsis
+d) Cellulitis only
+
+Peritonitis symptom in PD patient:
+a) Clear dialysate
+b) Cloudy effluent with abdominal pain
+c) No pain
+d) Only cough
+
+Dialysis catheter dressing change should be:
+a) In dirty room
+b) Using aseptic technique
+c) With bare hands only
+d) Without mask
+
+Hemodialysis में blood pump का कार्य क्या है?
+a) Water heat करना
+b) Blood को extracorporeal circuit में circulate करना
+c) Dialysate तैयार करना
+d) Air detect करना
+
+Before connecting patient, dialyzer and lines must be:
+a) Dry
+b) Properly primed with saline
+c) Filled with air
+d) Empty
+
+Main symptom of anemia in CKD:
+a) Joint swelling
+b) Fatigue and breathlessness on exertion
+c) Vomiting only
+d) Rash
+
+In HD, blood flow rate is usually:
+a) 10–20 ml/min
+b) 50–100 ml/min
+c) 200–350 ml/min
+d) 800 ml/min
+
+UF (ultrafiltration) mainly removes:
+a) Solutes only
+b) Fluid (water) with some solute
+c) Only RBC
+d) Only platelets
+
+Dialysate should be:
+a) Sterile blood
+b) Carefully prepared electrolyte solution
+c) Plain water
+d) Oil
+
+CKD patient dietary advice usually includes:
+a) Unlimited salt
+b) Salt and fluid restriction as per order
+c) Only sweets
+d) No restriction ever
+
+सबसे सामान्य कारण CKD का विश्व स्तर पर:
+a) Malaria
+b) Diabetes mellitus
+c) Snake bite
+d) Dengue
+
+Protein restriction in CKD mainly helps to:
+a) Increase urea
+b) Decrease nitrogenous waste production
+c) Increase GFR damage
+d) Cause obesity
+
+For AV fistula needle removal, technician should:
+a) Pull out and leave
+b) Apply firm pressure with sterile gauze
+c) Tape only, no pressure
+d) Wash only
+
+Bruit and thrill are checked in AV fistula to assess:
+a) Infection
+b) Patency and flow
+c) Fracture
+d) Edema
+
+HD machine conductivity alarm generally relates to:
+a) Blood pressure
+b) Dialysate concentration
+c) Temperature of room
+d) ECG of patient
+
+During HD, sudden chest pain and shortness of breath may indicate:
+a) Air embolism or cardiac event
+b) Nail infection
+c) Gastritis only
+d) Skin allergy only
+
+Which parameter is commonly used to assess dialysis adequacy?
+a) Hemoglobin
+b) Kt/V or URR
+c) Blood group
+d) ESR
+
+Reuse of dialyzer is generally not done in:
+a) Hepatitis B positive patients (by many protocols)
+b) Stable CKD patient
+c) Young patient
+d) Old patient
+
+In HD unit, which waste goes in puncture‑proof container?
+a) Paper
+b) Used needles and sharps
+c) Food
+d) Water
+
+Dialysis technician की महत्त्वपूर्ण जिम्मेदारी कौन‑सी है?
+a) Only payment collection
+b) Machine operation, monitoring, basic patient care under nephrologist
+c) Surgery करना
+d) Medicine prescribe करना
+
+In case of power failure, first action:
+a) Leave patient
+b) Manually rotate blood pump if hand crank provided and clamp lines as per protocol
+c) Remove needles immediately without plan
+d) Nothing
+
+Dialysate temperature normally set around:
+a) 20°C
+b) 25°C
+c) 36–37°C
+d) 45°C
+
+High dialysate temperature may cause:
+a) Hypothermia
+b) Vasodilation and hypotension
+c) Hypertension only
+d) No effect
+
+Before each shift, machine disinfection status must be:
+a) Ignored
+b) Verified and documented as per protocol
+c) Asked from patient
+d) Not required
+
+Which of the following is a chronic complication of long‑term HD?
+a) Disequilibrium syndrome
+b) Amyloidosis, bone disease
+c) Acute hemolysis
+d) Acute allergy
+
+PD fluid bag before use should be:
+a) Cold
+b) Warmed to near body temperature as per instructions
+c) Boiled
+d) Frozen
