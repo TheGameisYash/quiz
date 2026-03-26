@@ -3,12 +3,13 @@ import { useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Trophy, ArrowLeft, RefreshCcw, Sparkles } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { questions } from '../data/questions';
 import { Button } from '../components/ui/Button';
 import { saveQuizResult } from '../lib/firebase';
+import type { QuizSetting, Question } from '../data/questions';
 
 interface LocationState {
   answers: Record<number, number>;
+  questions: Question[];
 }
 
 export const Result: React.FC = () => {
@@ -17,33 +18,48 @@ export const Result: React.FC = () => {
   const state = location.state as LocationState | null;
   const resultSaved = useRef(false);
 
-  if (!state || !state.answers) {
+  if (!state || !state.answers || !state.questions) {
     return <Navigate to="/" replace />;
   }
 
-  const { answers } = state;
+  const { answers, questions } = state;
+  const activeQuizStr = localStorage.getItem('activeQuiz');
+  const activeQuiz = activeQuizStr ? JSON.parse(activeQuizStr) as QuizSetting : null;
+
+  const correctPoints = activeQuiz?.correctPoints || 1;
+  const wrongDeduction = activeQuiz?.wrongDeduction || 0;
 
   const resultStats = useMemo(() => {
-    let partA_Score = 0;
-    let partB_Score = 0;
+    let correctCount = 0;
+    let wrongCount = 0;
     
     questions.forEach((q) => {
-      if (answers[q.id] === q.answer) {
-        if (q.part === 'A') partA_Score++;
-        else partB_Score++;
+      const userAnswer = answers[q.id];
+      if (userAnswer !== undefined) {
+        if (userAnswer === q.answer) {
+          correctCount++;
+        } else {
+          wrongCount++;
+        }
       }
     });
 
-    const totalScore = partA_Score + partB_Score;
-    const percentage = (totalScore / questions.length) * 100;
+    const baseScore = correctCount * correctPoints;
+    const penalty = wrongCount * wrongDeduction;
+    const finalScore = baseScore - penalty;
+    const trueFinalScore = finalScore < 0 ? 0 : finalScore; // Don't allow negative total score visually if preferred, but usually exams allow negatives. Let's keep true score. 
+    
+    const maxScore = questions.length * correctPoints;
+    const percentage = maxScore > 0 ? (trueFinalScore / maxScore) * 100 : 0;
     
     return {
-      partA_Score,
-      partB_Score,
-      totalScore,
-      percentage
+      correctCount,
+      wrongCount,
+      totalScore: Number(trueFinalScore.toFixed(2)),
+      percentage: Number(percentage.toFixed(2)),
+      maxScore
     };
-  }, [answers]);
+  }, [answers, questions, correctPoints, wrongDeduction]);
 
   useEffect(() => {
     if (resultSaved.current || !state) return;
@@ -54,10 +70,13 @@ export const Result: React.FC = () => {
         const currentUser = JSON.parse(currentUserStr);
         const newResult = {
           name: currentUser.name,
-          phone: currentUser.phone,
-          partA_Score: resultStats.partA_Score,
-          partB_Score: resultStats.partB_Score,
+          email: currentUser.email,
+          photoURL: currentUser.photoURL,
+          quizId: activeQuiz?.id || 'legacy',
+          quizName: activeQuiz?.name || 'Legacy Quiz',
           totalScore: resultStats.totalScore,
+          correctCount: resultStats.correctCount,
+          wrongCount: resultStats.wrongCount,
           answers: state.answers,
           date: new Date().toISOString()
         };
@@ -67,7 +86,6 @@ export const Result: React.FC = () => {
         localStorage.setItem('quiz_results', JSON.stringify(existingResults));
         resultSaved.current = true;
 
-        // Save to Firebase
         saveQuizResult(newResult).catch(e => console.error(e));
 
         if (resultStats.percentage >= 40) {
@@ -127,7 +145,7 @@ export const Result: React.FC = () => {
       <div className="w-full bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 p-8 shadow-sm mb-8">
         <div className="flex flex-col items-center mb-10">
           <div className="text-7xl font-black text-brand-500 mb-2">
-            {resultStats.totalScore}<span className="text-3xl text-slate-400">/100</span>
+            {resultStats.totalScore}<span className="text-3xl text-slate-400">/{resultStats.maxScore}</span>
           </div>
           <div className="text-lg font-medium text-slate-500">
             {resultStats.percentage}% Overall Score
@@ -136,23 +154,26 @@ export const Result: React.FC = () => {
 
         <div className="grid sm:grid-cols-2 gap-6 w-full">
           <div className="p-6 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700">
-            <div className="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-2">Part A: General</div>
-            <div className="text-3xl font-bold text-heading-light dark:text-heading-dark">
-              {resultStats.partA_Score} <span className="text-lg text-slate-400 font-medium">/ 25</span>
+            <div className="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-2">Correct Answers</div>
+            <div className="text-3xl font-bold text-green-600 dark:text-green-500">
+              {resultStats.correctCount} <span className="text-lg text-slate-400 font-medium">/ {questions.length}</span>
             </div>
             <div className="mt-3 w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
-              <div className="bg-blue-500 h-full" style={{ width: `${(resultStats.partA_Score / 25) * 100}%` }} />
+              <div className="bg-green-500 h-full" style={{ width: `${(resultStats.correctCount / questions.length) * 100}%` }} />
             </div>
           </div>
 
           <div className="p-6 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700">
-            <div className="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-2">Part B: Technical</div>
-            <div className="text-3xl font-bold text-heading-light dark:text-heading-dark">
-              {resultStats.partB_Score} <span className="text-lg text-slate-400 font-medium">/ 75</span>
+            <div className="text-sm font-semibold uppercase tracking-wider text-slate-500 mb-2">Wrong Answers</div>
+            <div className="text-3xl font-bold text-red-500">
+              {resultStats.wrongCount} <span className="text-lg text-slate-400 font-medium">/ {questions.length}</span>
             </div>
             <div className="mt-3 w-full bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
-              <div className="bg-brand-500 h-full" style={{ width: `${(resultStats.partB_Score / 75) * 100}%` }} />
+              <div className="bg-red-500 h-full" style={{ width: `${(resultStats.wrongCount / questions.length) * 100}%` }} />
             </div>
+            {wrongDeduction > 0 && (
+              <div className="text-xs text-slate-500 mt-2">Deducted: -{(resultStats.wrongCount * wrongDeduction).toFixed(2)} pts</div>
+            )}
           </div>
         </div>
       </div>

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Clock, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
-import { questions } from '../data/questions';
+import { fetchAllQuestions } from '../lib/questionsStore';
+import type { Question, QuizSetting } from '../data/questions';
 import { QuestionCard } from '../components/QuestionCard';
 import { Button } from '../components/ui/Button';
 
@@ -10,7 +11,47 @@ export const Quiz: React.FC = () => {
 
   const userStr = localStorage.getItem('currentUser');
   const user = userStr ? JSON.parse(userStr) : null;
-  const progressKey = user ? `quiz_progress_${user.phone}_${user.name}` : null;
+  const activeQuizStr = localStorage.getItem('activeQuiz');
+  const activeQuiz = activeQuizStr ? JSON.parse(activeQuizStr) as QuizSetting : null;
+
+  const progressKey = user && activeQuiz ? `quiz_progress_${activeQuiz.id}_${user.phone}_${user.name}` : null;
+
+  const [isLoadingQs, setIsLoadingQs] = useState(true);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [shuffledIds, setShuffledIds] = useState<number[]>([]);
+
+  useEffect(() => {
+    const initQuestions = async () => {
+      if (!activeQuiz || !activeQuiz.id) {
+        setIsLoadingQs(false);
+        return;
+      }
+      setIsLoadingQs(true);
+      const allQs = await fetchAllQuestions(activeQuiz.id);
+      
+      let activeIds: number[] = [];
+      if (progressKey) {
+        const saved = localStorage.getItem(progressKey);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed.shuffledIds && parsed.shuffledIds.length > 0) {
+             activeIds = parsed.shuffledIds;
+          }
+        }
+      }
+
+      if (activeIds.length === 0 && allQs.length > 0) {
+        const shuffled = [...allQs].sort(() => Math.random() - 0.5);
+        activeIds = shuffled.map(q => q.id);
+      }
+      
+      setShuffledIds(activeIds);
+      const loadedQs = activeIds.map(id => allQs.find(q => q.id === id)).filter(Boolean) as Question[];
+      setQuestions(loadedQs);
+      setIsLoadingQs(false);
+    };
+    initQuestions();
+  }, [progressKey]);
 
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(() => {
     if (progressKey) {
@@ -38,14 +79,15 @@ export const Quiz: React.FC = () => {
 
   // Save progress whenever it changes
   useEffect(() => {
-    if (progressKey) {
+    if (progressKey && questions.length > 0) {
       localStorage.setItem(progressKey, JSON.stringify({
+        shuffledIds,
         currentQuestionIndex,
         answers,
         timeLeft
       }));
     }
-  }, [currentQuestionIndex, answers, timeLeft, progressKey]);
+  }, [currentQuestionIndex, answers, timeLeft, progressKey, shuffledIds, questions.length]);
 
   useEffect(() => {
     if (!user) {
@@ -54,6 +96,8 @@ export const Quiz: React.FC = () => {
   }, [navigate, user]);
 
   useEffect(() => {
+    if (isLoadingQs || questions.length === 0) return;
+
     const timer = setInterval(() => {
       setTimeLeft((prev: number) => {
         if (prev <= 1) {
@@ -65,7 +109,34 @@ export const Quiz: React.FC = () => {
       });
     }, 1000);
     return () => clearInterval(timer);
-  }, []); // Added answers dependency so it submits current answers
+  }, [isLoadingQs, questions.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!user) {
+    return null;
+  }
+
+  if (isLoadingQs) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
+        <div className="flex flex-col items-center">
+          <div className="w-12 h-12 border-4 border-brand-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+          <h2 className="text-xl font-bold text-heading-light dark:text-heading-dark">Loading your Quiz...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (questions.length === 0) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex items-center justify-center p-6">
+        <div className="text-center max-w-md">
+          <h2 className="text-2xl font-bold text-heading-light dark:text-heading-dark mb-4">No Questions Available!</h2>
+          <p className="text-slate-500 mb-6">The database is currently empty. Please ask the Admin to upload questions via the Dashboard.</p>
+          <Button onClick={() => navigate('/')}>Return Home</Button>
+        </div>
+      </div>
+    );
+  }
 
   const currentQuestion = questions[currentQuestionIndex];
 
@@ -93,7 +164,7 @@ export const Quiz: React.FC = () => {
       if (progressKey) {
         localStorage.removeItem(progressKey);
       }
-      navigate('/result', { state: { answers } });
+      navigate('/result', { state: { answers, questions } });
     }
   };
 
@@ -132,7 +203,7 @@ export const Quiz: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-5 gap-2 max-h-[40vh] overflow-y-auto pr-2 custom-scrollbar">
-            {questions.map((q, idx) => {
+            {questions.map((q: Question, idx: number) => {
               const isAnswered = answers[q.id] !== undefined;
               const isCurrent = idx === currentQuestionIndex;
               return (
@@ -145,7 +216,7 @@ export const Quiz: React.FC = () => {
                     ${isAnswered ? 'bg-brand-500 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-700'}
                   `}
                 >
-                  {q.id}
+                  {idx + 1}
                 </button>
               );
             })}

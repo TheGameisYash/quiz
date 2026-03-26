@@ -1,5 +1,7 @@
 import { initializeApp, getApps } from "firebase/app";
-import { getFirestore, collection, addDoc, getDocs, orderBy, query } from "firebase/firestore";
+import { getAuth, GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { getFirestore, collection, addDoc, getDocs, orderBy, query, setDoc, doc, where, deleteDoc, updateDoc, writeBatch, limit, onSnapshot } from "firebase/firestore";
+import type { QuizSetting } from "../data/questions";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -12,8 +14,20 @@ const firebaseConfig = {
 
 const isConfigValid = !!firebaseConfig.apiKey;
 
-export const app = isConfigValid && !getApps().length ? initializeApp(firebaseConfig) : null;
-export const db = app ? getFirestore(app) : null;
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+const db = getFirestore(app);
+export const auth = getAuth(app);
+const googleProvider = new GoogleAuthProvider();
+
+export const signInWithGoogle = async () => {
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    return result.user;
+  } catch (error) {
+    console.error("Error signing in with Google", error);
+    throw error;
+  }
+};
 
 export const saveQuizResult = async (resultData: any) => {
   if (!db) {
@@ -45,4 +59,177 @@ export const getQuizResults = async () => {
     console.error("Error getting documents from Firebase: ", e);
     return [];
   }
+};
+
+// --- QUIZZES ---
+export const createQuizSetting = async (quiz: Omit<QuizSetting, 'id' | 'createdAt'>) => {
+  if (!db) return null;
+  if (quiz.isActive) {
+    await turnOffOtherQuizzes(''); 
+  }
+  const qData = { ...quiz, createdAt: new Date().toISOString() };
+  const docRef = await addDoc(collection(db, "quizzes"), qData);
+  return docRef.id;
+};
+
+export const getQuizSettings = async (): Promise<QuizSetting[]> => {
+  if (!db) return [];
+  const qList = query(collection(db, "quizzes"));
+  const querySnapshot = await getDocs(qList);
+  const results: QuizSetting[] = [];
+  querySnapshot.forEach((d) => {
+    results.push({ ...(d.data() as Omit<QuizSetting, 'id'>), id: d.id });
+  });
+  return results.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+};
+
+export const getActiveQuizSetting = async (): Promise<QuizSetting | null> => {
+  if (!db) return null;
+  const activeQList = query(collection(db, "quizzes"), where("isActive", "==", true), limit(1));
+  const querySnapshot = await getDocs(activeQList);
+  if (querySnapshot.empty) return null;
+  const d = querySnapshot.docs[0];
+  return { ...(d.data() as Omit<QuizSetting, 'id'>), id: d.id };
+};
+
+export const listenToActiveQuiz = (callback: (quiz: QuizSetting | null) => void) => {
+  if (!db) {
+    callback(null);
+    return () => {};
+  }
+  
+  const activeQList = query(collection(db, "quizzes"), where("isActive", "==", true), limit(1));
+  
+  const unsubscribe = onSnapshot(activeQList, (snapshot) => {
+    if (snapshot.empty) {
+      callback(null);
+    } else {
+      const d = snapshot.docs[0];
+      callback({ ...(d.data() as Omit<QuizSetting, 'id'>), id: d.id });
+    }
+  }, (error) => {
+    console.error("Live sync error: ", error);
+  });
+  
+  return unsubscribe;
+};
+
+const turnOffOtherQuizzes = async (excludeId: string) => {
+  if (!db) return;
+  const all = await getQuizSettings();
+  for (const q of all) {
+    if (q.id && q.id !== excludeId && q.isActive) {
+      await setDoc(doc(db, "quizzes", q.id), { isActive: false }, { merge: true });
+    }
+  }
+};
+
+export const updateQuizActiveStatus = async (quizId: string, isActive: boolean) => {
+  if (!db) return;
+  if (isActive) {
+    await turnOffOtherQuizzes(quizId);
+  }
+  await setDoc(doc(db, "quizzes", quizId), { isActive }, { merge: true });
+};
+
+export const updateQuizSetting = async (quizId: string, updates: Partial<QuizSetting>) => {
+  if (!db) return;
+  if (updates.isActive) {
+    await turnOffOtherQuizzes(quizId);
+  }
+  await updateDoc(doc(db, "quizzes", quizId), updates);
+};
+
+export const deleteQuizSetting = async (quizId: string) => {
+  if (!db) return;
+  const batch = writeBatch(db);
+  
+  // Delete the quiz
+  batch.delete(doc(db, "quizzes", quizId));
+  
+  // Find and delete all questions efficiently
+  const qList = query(collection(db, "questions"), where("quizId", "==", quizId));
+  const querySnapshot = await getDocs(qList);
+  querySnapshot.forEach((d) => {
+    batch.delete(d.ref);
+  });
+  
+  await batch.commit();
+};
+
+// --- QUESTIONS ---
+export const addQuestionsBatch = async (questions: any[]) => {
+  if (!db) {
+    console.warn("Firebase not configured. Storing in local storage only.");
+    if (questions.length > 0) {
+      const custom = JSON.parse(localStorage.getItem(`custom_questions_${questions[0].quizId}`) || '[]');
+      localStorage.setItem(`custom_questions_${questions[0].quizId}`, JSON.stringify([...custom, ...questions]));
+    }
+    return;
+  }
+  
+  try {
+    // Firestore batches have a limit of 500 operations
+    const chunks = [];
+    for (let i = 0; i < questions.length; i += 400) {
+      chunks.push(questions.slice(i, i + 400));
+    }
+    
+    for (const chunk of chunks) {
+      const batch = writeBatch(db);
+      for (const q of chunk) {
+        const newRef = doc(collection(db, "questions"));
+        batch.set(newRef, q);
+      }
+      await batch.commit();
+    }
+  } catch (e) {
+    console.error("Error batch adding questions: ", e);
+    throw e;
+  }
+};
+
+export const addQuestion = async (q: any) => {
+  if (!db) {
+    console.warn("Firebase not configured. Storing in local storage only.");
+    const custom = JSON.parse(localStorage.getItem(`custom_questions_${q.quizId}`) || '[]');
+    localStorage.setItem(`custom_questions_${q.quizId}`, JSON.stringify([...custom, q]));
+    return null;
+  }
+  try {
+    const docRef = await addDoc(collection(db, "questions"), q);
+    return docRef.id;
+  } catch (e) {
+    console.error("Error adding question to Firebase: ", e);
+    throw e;
+  }
+};
+
+export const getQuestionsFromDB = async (quizId: string) => {
+  if (!db) {
+    const custom = JSON.parse(localStorage.getItem(`custom_questions_${quizId}`) || '[]');
+    return custom;
+  }
+  try {
+    const qList = query(collection(db, "questions"), where("quizId", "==", quizId));
+    const querySnapshot = await getDocs(qList);
+    const results: any[] = [];
+    querySnapshot.forEach((d) => {
+      results.push({ ...d.data(), firebaseId: d.id });
+    });
+    return results.sort((a,b) => a.id - b.id);
+  } catch (e) {
+    console.error("Error getting questions from Firebase: ", e);
+    return [];
+  }
+};
+
+export const updateQuestionInDB = async (firebaseId: string, updates: any) => {
+  if (!db) return;
+  await updateDoc(doc(db, "questions", firebaseId), updates);
+};
+
+export const deleteQuestionFromDB = async (firebaseId: string) => {
+  if (!db) return;
+  await deleteDoc(doc(db, "questions", firebaseId));
 };
