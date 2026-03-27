@@ -208,11 +208,11 @@ export const Dashboard: React.FC = () => {
     if (!selectedQuiz || !selectedQuiz.id) return;
     
     const lines = questionsText.split('\n').filter(l => l.trim() !== '');
-    const keys = answersText.split(',').map(k => k.trim().toUpperCase());
+    const keys = answersText.split(/[\n,]+/).map(k => k.trim().toUpperCase()).filter(k => k !== '');
 
     if (lines.length !== keys.length && lines.length > 0) {
-      alert(`Error: You provided ${lines.length} questions but ${keys.length} answers! They must match exactly.`);
-      return;
+      const proceed = window.confirm(`Error: You provided ${lines.length} questions but ${keys.length} answers!\n\nThey usually must match exactly. Do you want to proceed anyway? (Missing answers will default to A)`);
+      if (!proceed) return;
     }
     if (lines.length === 0) {
       alert('Please enter some questions.'); return;
