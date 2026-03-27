@@ -201,6 +201,11 @@ export const Dashboard: React.FC = () => {
     const lines = questionsText.split('\n').filter(l => l.trim() !== '');
     const keys = answersText.split(/[\n,]+/).map(k => k.trim().toUpperCase()).filter(k => k !== '');
 
+    if (lines.length !== keys.length && lines.length > 0) {
+      alert(`Error! Count mismatch: You pasted ${lines.length} questions but ${keys.length} answers.\n\nPlease ensure you have copied the exact same number of questions and answers before clicking Parse & Add.`);
+      return;
+    }
+
     if (lines.length === 0) {
       alert('Please enter some questions.'); return;
     }
