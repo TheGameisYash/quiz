@@ -7,6 +7,43 @@ import { getQuizSettings, createQuizSetting, updateQuizSetting, deleteQuizSettin
 import type { Question, QuizSetting } from '../../data/questions';
 import { QuestionCard } from '../../components/QuestionCard';
 
+const parseCSVLine = (line: string): [string, string, string, string, string] | null => {
+  // Trim and remove extra spaces
+  const trimmed = line.trim();
+  
+  // Simple quoted CSV parser for 1 question + 4 options
+  // Supports commas inside quoted fields
+  const regex = /"([^"]*)"|([^,]*)(?:,|$)/g;
+  const matches: string[] = [];
+  let match;
+  
+  while ((match = regex.exec(trimmed)) !== null) {
+    if (match[1] !== undefined || match[2] !== undefined) {
+      matches.push((match[1] ?? match[2] ?? '').trim());
+    }
+    if (match.index === regex.lastIndex) {
+      regex.lastIndex++; // handle zero-length match just in case
+    }
+  }
+  
+  const validMatches = matches.filter(m => m !== '');
+  if (validMatches.length >= 5) {
+    return [validMatches[0], validMatches[1], validMatches[2], validMatches[3], validMatches[4]];
+  }
+  
+  if (matches.length >= 5) {
+    return [matches[0], matches[1], matches[2], matches[3], matches[4]];
+  }
+  
+  // Fallback: simple split (only if no commas in question)
+  const simpleParts = trimmed.split(',').map(p => p.trim());
+  if (simpleParts.length >= 5) {
+    return [simpleParts[0], simpleParts[1], simpleParts[2], simpleParts[3], simpleParts[4]];
+  }
+  
+  return null;
+};
+
 export const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'QUIZZES' | 'QUESTIONS' | 'USERS' | 'LIVE'>('QUIZZES');
   
@@ -185,9 +222,13 @@ export const Dashboard: React.FC = () => {
       let startId = questions.length > 0 ? Math.max(...questions.map(q => q.id)) : 1000;
 
       const newQs = lines.map((line, idx) => {
-        const parts = line.split(',');
-        const qText = parts[0].trim();
-        const options = parts.slice(1).map(p => p.trim());
+        const parsed = parseCSVLine(line);
+        if (!parsed) {
+          console.warn(`Invalid line ${idx + 1}: ${line}`);
+          return null;
+        }
+        
+        const [qText, optA, optB, optC, optD] = parsed;
 
         let ansStr = keys[idx] || 'A';
         let ansIdx = 0;
@@ -201,13 +242,13 @@ export const Dashboard: React.FC = () => {
         return {
           id: ++startId,
           quizId: selectedQuiz.id as string,
-          part: 'A', // default generic
+          part: 'A',
           topic: 'Custom',
           question: qText,
-          options: options.length >= 4 ? options.slice(0, 4) : ['Option A', 'Option B', 'Option C', 'Option D'],
-          answer: ansIdx
+          options: [optA, optB, optC, optD],
+          answer: Math.max(0, Math.min(3, ansIdx)) // Ensure 0-3
         } as Question;
-      });
+      }).filter((q): q is Question => q !== null);
 
       await saveNewQuestions(newQs);
       alert(`Successfully added ${newQs.length} questions!`);
