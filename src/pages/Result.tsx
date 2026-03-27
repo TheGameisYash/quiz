@@ -1,7 +1,7 @@
 import React, { useMemo, useEffect, useRef } from 'react';
 import { useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Trophy, ArrowLeft, RefreshCcw, Sparkles } from 'lucide-react';
+import { Trophy, ArrowLeft, RefreshCcw, Sparkles, History } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Button } from '../components/ui/Button';
 import { saveQuizResult } from '../lib/firebase';
@@ -178,9 +178,12 @@ export const Result: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex gap-4 flex-wrap justify-center">
         <Button variant="outline" onClick={() => navigate('/')}>
           <ArrowLeft className="w-5 h-5 mr-2" /> Back to Home
+        </Button>
+        <Button variant="outline" onClick={() => navigate('/my-results')}>
+          <History className="w-5 h-5 mr-2" /> View My History
         </Button>
         <Button onClick={() => navigate('/quiz')}>
           <RefreshCcw className="w-5 h-5 mr-2" /> Retake Quiz

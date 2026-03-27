@@ -5,6 +5,7 @@ import { Home } from './pages/Home';
 import { Register } from './pages/Register';
 import { Quiz } from './pages/Quiz';
 import { Result } from './pages/Result';
+import { MyResults } from './pages/MyResults';
 import { Login } from './pages/admin/Login';
 import { Dashboard } from './pages/admin/Dashboard';
 
@@ -17,6 +18,7 @@ function App() {
           <Route path="register" element={<Register />} />
           <Route path="quiz" element={<Quiz />} />
           <Route path="result" element={<Result />} />
+          <Route path="my-results" element={<MyResults />} />
           
           <Route path="admin">
             <Route index element={<Login />} />

@@ -1,11 +1,13 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { BrainCircuit, LogIn, LogOut } from 'lucide-react';
+import { BrainCircuit, LogIn, LogOut, History } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
   const isAdminLoggedIn = localStorage.getItem('isAdmin') === 'true';
+  const currentUserStr = typeof window !== 'undefined' ? localStorage.getItem('currentUser') : null;
+  const isStudentLoggedIn = !!currentUserStr;
 
   const handleLogout = () => {
     localStorage.removeItem('isAdmin');
@@ -37,13 +39,24 @@ export const Navbar: React.FC = () => {
                 </button>
               ) : null
             ) : (
-              <Link
-                to="/admin"
-                className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-brand-500 transition-colors"
-              >
-                <LogIn className="w-4 h-4" />
-                Admin Panel
-              </Link>
+              <div className="flex items-center gap-4">
+                {isStudentLoggedIn && (
+                  <Link
+                    to="/my-results"
+                    className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-brand-500 transition-colors"
+                  >
+                    <History className="w-4 h-4" />
+                    My Results
+                  </Link>
+                )}
+                <Link
+                  to="/admin"
+                  className="flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-brand-500 transition-colors"
+                >
+                  <LogIn className="w-4 h-4" />
+                  Admin Panel
+                </Link>
+              </div>
             )}
           </div>
         </div>

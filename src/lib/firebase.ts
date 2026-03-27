@@ -43,6 +43,26 @@ export const saveQuizResult = async (resultData: any) => {
   }
 };
 
+export const getMyQuizResults = async (email: string) => {
+  if (!db) return [];
+  try {
+    const q = query(
+      collection(db, "quiz_results"),
+      where("email", "==", email),
+      orderBy("date", "desc")
+    );
+    const querySnapshot = await getDocs(q);
+    const results: any[] = [];
+    querySnapshot.forEach((doc) => {
+      results.push({ id: doc.id, ...doc.data() });
+    });
+    return results;
+  } catch (e) {
+    console.error("Error getting user quiz results:", e);
+    return [];
+  }
+};
+
 export const getQuizResults = async () => {
   if (!db) {
     return [];
