@@ -7,32 +7,43 @@ import { getQuizSettings, createQuizSetting, updateQuizSetting, deleteQuizSettin
 import type { Question, QuizSetting } from '../../data/questions';
 import { QuestionCard } from '../../components/QuestionCard';
 
-const parseCSVLine = (line: string): [string, string, string, string, string] | null => {
+// Returns [question, optA, optB, optC, optD, answer, category, difficulty] or null
+// Supports the 8-column format: "Question","A","B","C","D","Answer","Category","Difficulty"
+const parseCSVLine = (line: string): [string, string, string, string, string, string, string, string] | null => {
   const trimmed = line.trim();
   if (!trimmed) return null;
-  
-  // Strategy 1: split by '","' or '", "' to safely separate quoted elements
+
+  // Primary strategy: split on '","' which handles commas inside quoted cells
   let parts = trimmed.split(/"\s*,\s*"/);
-  
-  // If we couldn't split by " , ", it's probably unquoted CSV
+
+  // Fallback: plain comma split for unquoted lines
   if (parts.length < 5) {
     parts = trimmed.split(',');
   }
 
-  // Clean each part by removing leading/trailing quotes, spaces, and converting "" to "
+  // Strip surrounding quotes and unescape double-quotes ("") → (")
   const cleaned = parts.map(p => p.trim().replace(/^"+|"+$/g, '').replace(/""/g, '"'));
-  
-  const valid = cleaned.filter(p => p !== '');
 
-  if (valid.length >= 5) {
-    return [valid[0], valid[1], valid[2], valid[3], valid[4]];
-  }
-  
   if (cleaned.length >= 5) {
-    return [cleaned[0], cleaned[1], cleaned[2], cleaned[3], cleaned[4]];
+    return [
+      cleaned[0] ?? '',  // question
+      cleaned[1] ?? '',  // opt A
+      cleaned[2] ?? '',  // opt B
+      cleaned[3] ?? '',  // opt C
+      cleaned[4] ?? '',  // opt D
+      cleaned[5] ?? 'A', // answer letter (A/B/C/D)
+      cleaned[6] ?? 'General', // category / topic
+      cleaned[7] ?? 'Medium',  // difficulty (unused currently)
+    ];
   }
-  
+
   return null;
+};
+
+// Returns true if a CSV line is a header row (i.e. first cell is "Question" or "question")
+const isHeaderRow = (line: string): boolean => {
+  const lower = line.trim().toLowerCase();
+  return lower.startsWith('"question"') || lower.startsWith('question,');
 };
 
 export const Dashboard: React.FC = () => {
@@ -197,14 +208,10 @@ export const Dashboard: React.FC = () => {
 
   const handleBulkAdd = async () => {
     if (!selectedQuiz || !selectedQuiz.id) return;
-    
-    const lines = questionsText.split('\n').filter(l => l.trim() !== '');
-    const keys = answersText.split(/[\n,]+/).map(k => k.trim().toUpperCase()).filter(k => k !== '');
 
-    if (lines.length !== keys.length && lines.length > 0) {
-      alert(`Error! Count mismatch: You pasted ${lines.length} questions but ${keys.length} answers.\n\nPlease ensure you have copied the exact same number of questions and answers before clicking Parse & Add.`);
-      return;
-    }
+    // Split into non-empty lines and skip the header row if present
+    const rawLines = questionsText.split('\n').filter(l => l.trim() !== '');
+    const lines = rawLines.filter(l => !isHeaderRow(l));
 
     if (lines.length === 0) {
       alert('Please enter some questions.'); return;
@@ -212,22 +219,25 @@ export const Dashboard: React.FC = () => {
 
     try {
       let startId = questions.length > 0 ? Math.max(...questions.map(q => q.id)) : 1000;
+      const failures: number[] = [];
 
       const newQs = lines.map((line, idx) => {
         const parsed = parseCSVLine(line);
         if (!parsed) {
           console.warn(`Invalid line ${idx + 1}: ${line}`);
+          failures.push(idx + 1);
           return null;
         }
-        
-        const [qText, optA, optB, optC, optD] = parsed;
 
-        let ansStr = keys[idx] || 'A';
+        const [qText, optA, optB, optC, optD, answerLetter, category] = parsed;
+
+        // Resolve answer letter (A/B/C/D) → index (0/1/2/3)
+        const ansUpper = answerLetter.trim().toUpperCase();
         let ansIdx = 0;
-        if (['A','B','C','D'].includes(ansStr)) {
-          ansIdx = ansStr.charCodeAt(0) - 65;
+        if (['A','B','C','D'].includes(ansUpper)) {
+          ansIdx = ansUpper.charCodeAt(0) - 65;
         } else {
-          ansIdx = parseInt(ansStr) - 1;
+          ansIdx = parseInt(ansUpper) - 1;
           if (isNaN(ansIdx)) ansIdx = 0;
         }
 
@@ -235,18 +245,23 @@ export const Dashboard: React.FC = () => {
           id: ++startId,
           quizId: selectedQuiz.id as string,
           part: 'A',
-          topic: 'Custom',
+          topic: category || 'General',
           question: qText,
           options: [optA, optB, optC, optD],
-          answer: Math.max(0, Math.min(3, ansIdx)) // Ensure 0-3
+          answer: Math.max(0, Math.min(3, ansIdx))
         } as Question;
       }).filter((q): q is Question => q !== null);
 
+      if (failures.length > 0) {
+        const ok = window.confirm(`${failures.length} line(s) could not be parsed (lines: ${failures.join(', ')}).\n\nDo you want to upload the remaining ${newQs.length} valid questions?`);
+        if (!ok) return;
+      }
+
       await saveNewQuestions(newQs);
-      alert(`Successfully added ${newQs.length} questions!`);
+      alert(`✅ Successfully added ${newQs.length} questions!`);
       setQuestionsText('');
       setAnswersText('');
-      
+
       setIsLoadingQs(true);
       const updatedQs = await fetchAllQuestions(selectedQuiz.id);
       setQuestions(updatedQs);
@@ -483,22 +498,19 @@ export const Dashboard: React.FC = () => {
 
             {isAddingQuestions && (
               <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-6 sm:p-8 mb-8">
-                <h2 className="text-xl font-bold text-heading-light dark:text-heading-dark mb-4">Bulk Upload to {selectedQuiz.name}</h2>
-                <div className="space-y-6">
+                <h2 className="text-xl font-bold text-heading-light dark:text-heading-dark mb-2">Bulk Upload to {selectedQuiz.name}</h2>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+                  Paste your CSV below. The answer key and category must be embedded in each row.
+                  <br />
+                  <span className="font-mono text-xs text-slate-400">Format: "Question","A","B","C","D","Answer","Category","Difficulty"</span>
+                </p>
+                <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Questions & Options (Comma separated format)</label>
-                    <textarea 
-                      rows={6} value={questionsText} onChange={(e) => setQuestionsText(e.target.value)}
-                      placeholder="e.g. Which planet is known as the Red Planet?, Earth, Mars, Jupiter, Venus"
-                      className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-500 font-mono text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Answer Keys</label>
-                    <input 
-                      type="text" value={answersText} onChange={(e) => setAnswersText(e.target.value)}
-                      placeholder="e.g. B, A, C, D"
-                      className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-500 font-mono text-sm"
+                    <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">CSV Data (header row optional — will be skipped automatically)</label>
+                    <textarea
+                      rows={10} value={questionsText} onChange={(e) => setQuestionsText(e.target.value)}
+                      placeholder={`"Question","Option A","Option B","Option C","Option D","Answer","Category","Difficulty"\n"Which planet is nearest to the sun?","Earth","Mars","Mercury","Venus","C","Science","Easy"`}
+                      className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-brand-500 font-mono text-xs leading-relaxed"
                     />
                   </div>
                   <button onClick={handleBulkAdd} className="bg-brand-500 hover:bg-brand-600 text-white font-bold py-3 px-6 rounded-xl shadow-md w-full sm:w-auto">
