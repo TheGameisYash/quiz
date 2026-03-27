@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Clock, ChevronLeft, ChevronRight, CheckCircle2 } from 'lucide-react';
 import { fetchAllQuestions } from '../lib/questionsStore';
@@ -11,10 +11,15 @@ import { Button } from '../components/ui/Button';
 export const Quiz: React.FC = () => {
   const navigate = useNavigate();
 
-  const userStr = localStorage.getItem('currentUser');
-  const user = userStr ? JSON.parse(userStr) : null;
-  const activeQuizStr = localStorage.getItem('activeQuiz');
-  const activeQuiz = activeQuizStr ? JSON.parse(activeQuizStr) as QuizSetting : null;
+  const user = useMemo(() => {
+    const userStr = localStorage.getItem('currentUser');
+    return userStr ? JSON.parse(userStr) : null;
+  }, []);
+  
+  const activeQuiz = useMemo(() => {
+    const activeQuizStr = localStorage.getItem('activeQuiz');
+    return activeQuizStr ? JSON.parse(activeQuizStr) as QuizSetting : null;
+  }, []);
 
   const progressKey = user && activeQuiz ? `quiz_progress_${activeQuiz.id}_${user.phone}_${user.name}` : null;
 
