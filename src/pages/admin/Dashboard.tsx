@@ -8,37 +8,28 @@ import type { Question, QuizSetting } from '../../data/questions';
 import { QuestionCard } from '../../components/QuestionCard';
 
 const parseCSVLine = (line: string): [string, string, string, string, string] | null => {
-  // Trim and remove extra spaces
   const trimmed = line.trim();
+  if (!trimmed) return null;
   
-  // Simple quoted CSV parser for 1 question + 4 options
-  // Supports commas inside quoted fields
-  const regex = /"([^"]*)"|([^,]*)(?:,|$)/g;
-  const matches: string[] = [];
-  let match;
+  // Strategy 1: split by '","' or '", "' to safely separate quoted elements
+  let parts = trimmed.split(/"\s*,\s*"/);
   
-  while ((match = regex.exec(trimmed)) !== null) {
-    if (match[1] !== undefined || match[2] !== undefined) {
-      matches.push((match[1] ?? match[2] ?? '').trim());
-    }
-    if (match.index === regex.lastIndex) {
-      regex.lastIndex++; // handle zero-length match just in case
-    }
+  // If we couldn't split by " , ", it's probably unquoted CSV
+  if (parts.length < 5) {
+    parts = trimmed.split(',');
+  }
+
+  // Clean each part by removing leading/trailing quotes, spaces, and converting "" to "
+  const cleaned = parts.map(p => p.trim().replace(/^"+|"+$/g, '').replace(/""/g, '"'));
+  
+  const valid = cleaned.filter(p => p !== '');
+
+  if (valid.length >= 5) {
+    return [valid[0], valid[1], valid[2], valid[3], valid[4]];
   }
   
-  const validMatches = matches.filter(m => m !== '');
-  if (validMatches.length >= 5) {
-    return [validMatches[0], validMatches[1], validMatches[2], validMatches[3], validMatches[4]];
-  }
-  
-  if (matches.length >= 5) {
-    return [matches[0], matches[1], matches[2], matches[3], matches[4]];
-  }
-  
-  // Fallback: simple split (only if no commas in question)
-  const simpleParts = trimmed.split(',').map(p => p.trim());
-  if (simpleParts.length >= 5) {
-    return [simpleParts[0], simpleParts[1], simpleParts[2], simpleParts[3], simpleParts[4]];
+  if (cleaned.length >= 5) {
+    return [cleaned[0], cleaned[1], cleaned[2], cleaned[3], cleaned[4]];
   }
   
   return null;
