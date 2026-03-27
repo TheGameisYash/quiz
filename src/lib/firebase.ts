@@ -46,16 +46,19 @@ export const saveQuizResult = async (resultData: any) => {
 export const getMyQuizResults = async (email: string) => {
   if (!db) return [];
   try {
+    // No orderBy here — combining where() + orderBy() on different fields
+    // requires a composite index. We sort client-side to avoid that.
     const q = query(
       collection(db, "quiz_results"),
-      where("email", "==", email),
-      orderBy("date", "desc")
+      where("email", "==", email)
     );
     const querySnapshot = await getDocs(q);
     const results: any[] = [];
     querySnapshot.forEach((doc) => {
       results.push({ id: doc.id, ...doc.data() });
     });
+    // Sort newest-first in memory
+    results.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     return results;
   } catch (e) {
     console.error("Error getting user quiz results:", e);
